@@ -1,20 +1,12 @@
----
-title: "Factor Analysis - Measurement Invariance"
-author: "*Adam Garber*"
-subtitle: 'Factor Analysis ED 216B - Instructor: Karen Nylund-Gibson'
-date: "`r format(Sys.time(), '%B %d, %Y')`"
-output:
-  pdf_document: default
-  html_document: default
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, eval = FALSE, message = FALSE, warning = FALSE, tidy = TRUE)
-```
+# ---
+#   title: "Factor Analysis - Measurement Invariance"
+# author: "*Adam Garber*"
+# subtitle: 'Factor Analysis ED 216B - Instructor: Karen Nylund-Gibson'
+# date: "March 02, 2020"
+# ---
 
 #### DATA SOURCE: This lab exercise utilizes the NCES public-use dataset: Education Longitudinal Study of 2002 (Lauff & Ingels, 2014) [$\color{blue}{\text{See website: nces.ed.gov}}$](https://nces.ed.gov/surveys/els2002/avail_data.asp)
 
-```{r, eval=TRUE}
 # load packages
 library(MplusAutomation)
 library(haven)
@@ -24,8 +16,7 @@ library(here)
 library(corrplot)
 library(kableExtra)
 library(reshape2)
-```
-
+ 
 # ____________________________________
 
 ## Lab 9 - Begin 
@@ -34,15 +25,11 @@ library(reshape2)
 
 
 #### Read in data
-```{r}
-
 lab_data <- read_csv(here("data", "els2002_data_subset3.csv"))
 
-```
+ 
 
 #### Preparations: subset,reorder, rename, and recode data
-```{r}
-
 invar_data <-  lab_data %>% 
   select(bystlang, freelnch, byincome,                    # covariates 
          stolen, t_hurt, p_fight, hit, damaged, bullied,  # factor 1 (indicators)
@@ -51,52 +38,46 @@ invar_data <-  lab_data %>%
   rename("unsafe" = "safe") %>% 
   mutate(
     freelnch = case_when(    # Grade 10, percent free lunch - transform to binary
-        freelnch <  3 ~ 0,   # school has less than 11% 
-        freelnch >= 3 ~ 1))  # school has greater than or equal to 11% 
+      freelnch <  3 ~ 0,   # school has less than 11% 
+      freelnch >= 3 ~ 1))  # school has greater than or equal to 11% 
 
 table(invar_data$freelnch) # reasonably balanced groups
 
-```
+ 
 
 #### Take a quick look at variable distributions
-```{r}
-
 melt(invar_data[,4:13]) %>% 
   ggplot(., aes(x=value, label=variable)) +
   geom_histogram(bins = 15) +
   facet_wrap(~variable, scales = "free")
 
-```
+ 
 
 #### Reverse code factor for ease of interpretation 
-```{r}
-
 cols = c("unsafe", "disrupt", "gangs", "rac_fght")
 
 invar_data[ ,cols] <-  5 - invar_data[ ,cols]
 
-```
+ 
 
 #### factor names and interpretation:
 
-- VICTIM: student reports being a victim of injury to self or property
-    - scale range: Never, Once or twice, More than twice
-    - higher values indicate greater frequency of victimization events
-- NEG_CLIM: Student reports on negative school climate attributes 
-    - scale range: Strongly Disagree - Strongly Agree
-    - higher values indicate a more negative climate
+# - VICTIM: student reports being a victim of injury to self or property
+# - scale range: Never, Once or twice, More than twice
+# - higher values indicate greater frequency of victimization events
+# - NEG_CLIM: Student reports on negative school climate attributes 
+# - scale range: Strongly Disagree - Strongly Agree
+# - higher values indicate a more negative climate
 
 
 #### check correct coding, explore correlations
-```{r}
-
+  
 cor_matrix <- cor(invar_data[4:13], use = "pairwise.complete.obs")
 
 corrplot(cor_matrix, 
          method = "circle",
          type = "upper")
-```
-
+ 
 # ____________________________________
 
 ### **Step 0:** Estimate the Unconditional Confirmatory Factor Analysis (CFA) model
@@ -105,12 +86,11 @@ corrplot(cor_matrix,
 
 ### Number of parameters = 31
 
-- 10 item loadings (10items*2groups)
-- 10 intercepts
-- 10 residual variances
-- 01 factor co-variances 
+# - 10 item loadings (10items*2groups)
+# - 10 intercepts
+# - 10 residual variances
+# - 01 factor co-variances 
 
-```{r}
 cfa_m0  <- mplusObject(
   TITLE = "model0 - unconditional CFA model", 
   VARIABLE = 
@@ -133,11 +113,9 @@ cfa_m0  <- mplusObject(
   rdata = invar_data)
 
 cfa_m0_fit <- mplusModeler(cfa_m0, 
-                            dataout=here("invar_mplus", "lab9_invar_data.dat"),
-                            modelout=here("invar_mplus", "M0_CFA_fullsample.inp"),
-                            check=TRUE, run = TRUE, hashfilename = FALSE)
-```
-
+                           dataout=here("invar_mplus", "lab9_invar_data.dat"),
+                           modelout=here("invar_mplus", "M0_CFA_fullsample.inp"),
+                           check=TRUE, run = TRUE, hashfilename = FALSE)
 
 # ____________________________________
 
@@ -146,7 +124,6 @@ cfa_m0_fit <- mplusModeler(cfa_m0,
 # ____________________________________
 
 #### Group freelnch = 0 (low)  CFA
-```{r}
 
 cfa_m1  <- mplusObject(
   TITLE = "CFA model1 - group is 0 for freelnch", 
@@ -173,13 +150,12 @@ cfa_m1  <- mplusObject(
   rdata = invar_data)
 
 cfa_m1_fit <- mplusModeler(cfa_m1, 
-                            dataout=here("invar_mplus", "lab9_invar_data.dat"),
-                            modelout=here("invar_mplus", "M1_CFA_freelnch_0.inp"),
-                            check=TRUE, run = TRUE, hashfilename = FALSE)
-```
+                           dataout=here("invar_mplus", "lab9_invar_data.dat"),
+                           modelout=here("invar_mplus", "M1_CFA_freelnch_0.inp"),
+                           check=TRUE, run = TRUE, hashfilename = FALSE)
+ 
 
 #### Group freelnch = 1 (moderate to high)  CFA
-```{r}
 
 cfa_m2  <- mplusObject(
   TITLE = "CFA model2 - group is 1 for freelnch", 
@@ -198,7 +174,7 @@ cfa_m2  <- mplusObject(
      
      NEG_CLIM by unsafe* disrupt gangs rac_fght;
      NEG_CLIM@1; ",
-     
+  
   PLOT = "type = plot3;",
   OUTPUT = "sampstat standardized residual modindices (3.84);",
   
@@ -206,37 +182,29 @@ cfa_m2  <- mplusObject(
   rdata = invar_data)
 
 cfa_m2_fit <- mplusModeler(cfa_m2, 
-                            dataout=here("invar_mplus", "lab9_invar_data.dat"),
-                            modelout=here("invar_mplus", "M2_CFA_freelnch_1.inp"),
-                            check=TRUE, run = TRUE, hashfilename = FALSE)
+                           dataout=here("invar_mplus", "lab9_invar_data.dat"),
+                           modelout=here("invar_mplus", "M2_CFA_freelnch_1.inp"),
+                           check=TRUE, run = TRUE, hashfilename = FALSE)
 
-```
+ 
 
 ## ~~~~~~~~~~~~~~~~~~~~~ Multi-Group Invariance Models ~~~~~~~~~~~~~~~~~~~~~ 
-
-```{r, echo=FALSE, eval=TRUE, out.width = "70%", out.height= "70%", fig.align = "center"}
-knitr::include_graphics(here("figures", "mean_structure.png"))
-```
-
-#### *Figure*: Picture depicting mean structure from slide by Dr. Karen Nylund-Gibson
 
 # ____________________________________
 
 ### **Step 2:** Configural invariance
 
-- free item loadings, intercepts, and residuals
-- factor means fixed to zero
+# - free item loadings, intercepts, and residuals
+# - factor means fixed to zero
 
 # ____________________________________
 
 ### Number of parameters = 62
 
-- 20 item loadings (10items*2groups)
-- 20 intercepts
-- 20 residual variances
-- 02 factor co-variances (1 for each group)
-
-```{r}
+# - 20 item loadings (10items*2groups)
+# - 20 intercepts
+# - 20 residual variances
+# - 02 factor co-variances (1 for each group)
 
 cfa_m3  <- mplusObject(
   TITLE = "CFA model3 - configural invariance", 
@@ -278,34 +246,28 @@ cfa_m3  <- mplusObject(
   rdata = invar_data)
 
 cfa_m3_fit <- mplusModeler(cfa_m3, 
-                            dataout=here("invar_mplus", "lab9_invar_data.dat"),
-                            modelout=here("invar_mplus", "M3_configural.inp"),
-                            check=TRUE, run = TRUE, hashfilename = FALSE)
-
-```
-
+                           dataout=here("invar_mplus", "lab9_invar_data.dat"),
+                           modelout=here("invar_mplus", "M3_configural.inp"),
+                           check=TRUE, run = TRUE, hashfilename = FALSE)
 
 # ____________________________________
 
 ### **Step 3:** Metric invariance
 
-- item loadings (set to equal)
-- free intercepts and residuals
-- factor means fixed to zero
-- free factor variances in group 2
+# - item loadings (set to equal)
+# - free intercepts and residuals
+# - factor means fixed to zero
+# - free factor variances in group 2
 
 # ____________________________________
 
 ### Number of parameters = 54
 
-- 10 item loadings (set to equal)
-- 20 intercepts
-- 20 residual variances
-- 02 factor variances 
-- 02 factor co-variances 
-
-
-```{r}
+# - 10 item loadings (set to equal)
+# - 20 intercepts
+# - 20 residual variances
+# - 02 factor variances 
+# - 02 factor co-variances 
 
 cfa_m4  <- mplusObject(
   TITLE = "CFA model4 - metric invariance", 
@@ -345,34 +307,30 @@ cfa_m4  <- mplusObject(
   rdata = invar_data)
 
 cfa_m4_fit <- mplusModeler(cfa_m4, 
-                            dataout=here("invar_mplus", "lab9_invar_data.dat"),
-                            modelout=here("invar_mplus", "M4_metric.inp"),
-                            check=TRUE, run = TRUE, hashfilename = FALSE)
-
-```
+                           dataout=here("invar_mplus", "lab9_invar_data.dat"),
+                           modelout=here("invar_mplus", "M4_metric.inp"),
+                           check=TRUE, run = TRUE, hashfilename = FALSE)
 
 # ____________________________________
 
 ### **Step 4:** Scalar invariance
 
-- item loadings (set to equal)
-- intercepts (set to equal)
-- free residuals
-- factor means fixed to zero
-- free factor variances in group 2
+# - item loadings (set to equal)
+# - intercepts (set to equal)
+# - free residuals
+# - factor means fixed to zero
+# - free factor variances in group 2
 
 # ____________________________________
 
 ### Number of parameters = 46
 
-- 10 item loadings (set to equal)
-- 10 intercepts (set to equal)
-- 20 residual variances
-- 02 factor variances 
-- 02 factor co-variances 
-- 02 factor means
-
-```{r}
+# - 10 item loadings (set to equal)
+# - 10 intercepts (set to equal)
+# - 20 residual variances
+# - 02 factor variances 
+# - 02 factor co-variances 
+# - 02 factor means
 
 cfa_m5  <- mplusObject(
   TITLE = "model5 - scalar invariance", 
@@ -408,35 +366,30 @@ cfa_m5  <- mplusObject(
   rdata = invar_data)
 
 cfa_m5_fit <- mplusModeler(cfa_m5, 
-                            dataout=here("invar_mplus", "lab9_invar_data.dat"),
-                            modelout=here("invar_mplus", "M5_scalar.inp"),
-                            check=TRUE, run = TRUE, hashfilename = FALSE)
-
-```
+                           dataout=here("invar_mplus", "lab9_invar_data.dat"),
+                           modelout=here("invar_mplus", "M5_scalar.inp"),
+                           check=TRUE, run = TRUE, hashfilename = FALSE)
 
 # ____________________________________
 
 ### **Step 5:** Strict invariance
 
-- item loadings (set to equal)
-- intercepts (set to equal)
-- residuals (set to equal)
-- factor means fixed to zero
-- free factor variances in group 2
+# - item loadings (set to equal)
+# - intercepts (set to equal)
+# - residuals (set to equal)
+# - factor means fixed to zero
+# - free factor variances in group 2
 
 # ____________________________________
 
 ### Number of parameters = 36
 
-- 10 item loadings (set to equal)
-- 10 intercepts (set to equal)
-- 10 residual variances
-- 02 factor variances 
-- 02 factor co-variances 
-- 02 factor means
-
-
-```{r}
+# - 10 item loadings (set to equal)
+# - 10 intercepts (set to equal)
+# - 10 residual variances
+# - 02 factor variances 
+# - 02 factor co-variances 
+# - 02 factor means
 
 cfa_m6  <- mplusObject(
   TITLE = "model6 - strict invariance", 
@@ -476,11 +429,9 @@ cfa_m6  <- mplusObject(
   rdata = invar_data)
 
 cfa_m6_fit <- mplusModeler(cfa_m6, 
-                            dataout=here("invar_mplus", "lab9_invar_data.dat"),
-                            modelout=here("invar_mplus", "M6_strict.inp"),
-                            check=TRUE, run = TRUE, hashfilename = FALSE)
-
-```
+                           dataout=here("invar_mplus", "lab9_invar_data.dat"),
+                           modelout=here("invar_mplus", "M6_strict.inp"),
+                           check=TRUE, run = TRUE, hashfilename = FALSE)
 
 # ____________________________________
 
@@ -488,26 +439,24 @@ cfa_m6_fit <- mplusModeler(cfa_m6,
 
 #### Demonstration of structural invariance using the **Scalar model**
 
-- item loadings (set to equal)
-- intercepts (set to equal)
-- free residuals (Scalar)
-- factor means free in group 2
-- factor variances (set to 1)
-- free factor covariances
+# - item loadings (set to equal)
+# - intercepts (set to equal)
+# - free residuals (Scalar)
+# - factor means free in group 2
+# - factor variances (set to 1)
+# - free factor covariances
 
 # ____________________________________
 
 ### Number of parameters = 44
 
-- 10 item loadings (set to equal)
-- 10 intercepts (set to equal)
-- 20 residual variances
-- 00 factor variances 
-- 02 factor co-variances 
-- 02 factor means
-
-
-```{r}
+# - 10 item loadings (set to equal)
+# - 10 intercepts (set to equal)
+# - 20 residual variances
+# - 00 factor variances 
+# - 02 factor co-variances 
+# - 02 factor means
+  
 # fixed factor variances
 cfa_m7  <- mplusObject(
   TITLE = "model7 - structural invariance A" , 
@@ -541,11 +490,9 @@ cfa_m7  <- mplusObject(
   rdata = invar_data)
 
 cfa_m7_fit <- mplusModeler(cfa_m7, 
-                            dataout=here("invar_mplus", "lab9_invar_data.dat"),
-                            modelout=here("invar_mplus", "M7_structuralA.inp"),
-                            check=TRUE, run = TRUE, hashfilename = FALSE)
-
-```
+                           dataout=here("invar_mplus", "lab9_invar_data.dat"),
+                           modelout=here("invar_mplus", "M7_structuralA.inp"),
+                           check=TRUE, run = TRUE, hashfilename = FALSE)
 
 # ____________________________________
 
@@ -553,26 +500,24 @@ cfa_m7_fit <- mplusModeler(cfa_m7,
 
 #### Demonstration of structural invariance using the **Scalar model**
 
-- item loadings (set to equal)
-- intercepts (set to equal)
-- free residuals (Scalar)
-- factor means free in group 2
-- factor variances (set to equal)
-- factor covariances (set to equal)
+# - item loadings (set to equal)
+# - intercepts (set to equal)
+# - free residuals (Scalar)
+# - factor means free in group 2
+# - factor variances (set to equal)
+# - factor covariances (set to equal)
 
 # ____________________________________
 
 ### Number of parameters = 43
 
-- 10 item loadings (set to equal)
-- 10 intercepts (set to equal)
-- 20 residual variances
-- 00 factor variances 
-- 01 factor co-variances 
-- 02 factor means
+# - 10 item loadings (set to equal)
+# - 10 intercepts (set to equal)
+# - 20 residual variances
+# - 00 factor variances 
+# - 01 factor co-variances 
+# - 02 factor means
 
-
-```{r}
 
 # equal factor variances and covariances
 cfa_m8  <- mplusObject(
@@ -611,20 +556,19 @@ cfa_m8  <- mplusObject(
   rdata = invar_data)
 
 cfa_m8_fit <- mplusModeler(cfa_m8, 
-                            dataout=here("invar_mplus", "lab9_invar_data.dat"),
-                            modelout=here("invar_mplus", "M8_structuralB.inp"),
-                            check=TRUE, run = TRUE, hashfilename = FALSE)
+                           dataout=here("invar_mplus", "lab9_invar_data.dat"),
+                           modelout=here("invar_mplus", "M8_structuralB.inp"),
+                           check=TRUE, run = TRUE, hashfilename = FALSE)
 
-```
-
+ 
 #### Latent Factor Means differences:
-(model: Step_07_STRUCTURAL)
+# (model: Step_07_STRUCTURAL)
+# 
+# Mean differences: Students in sub-sample `freelnch_1` have...
+# 
+# VICTIM     -0.026      0.091     -0.291      0.771  (not significant)
+# NEG_CLIM    0.632      0.104      6.104      0.000  (higher scores for "NEG_CLIM")
 
-Mean differences: Students in sub-sample `freelnch_1` have...
-
-    VICTIM     -0.026      0.091     -0.291      0.771  (not significant)
-    NEG_CLIM    0.632      0.104      6.104      0.000  (higher scores for "NEG_CLIM")
-    
 
 # ____________________________________
 
@@ -634,30 +578,26 @@ Mean differences: Students in sub-sample `freelnch_1` have...
 
 ### Guidlines for loadings & fit indices
 
-- **Simple structure:** “0.4 - 0.3 - 0.2” rule Howard (2016)
-(primary loadings > 0.4 / cross-loadings < 0.3 / minimum difference = 0.2)
-- **RMSEA:** < .05 indicates "good" fit Brown (2015)
--   **CFI:** > .95 indicates "good" fit Brown (2015)
--  **SRMR:** < .08 indicates "good" fit Hu and Bentler (1999)
-- **Invariance:** Changes in **CFI** less than or equal to **-0.01** are acceptable
+# - **Simple structure:** “0.4 - 0.3 - 0.2” rule Howard (2016)
+# (primary loadings > 0.4 / cross-loadings < 0.3 / minimum difference = 0.2)
+# - **RMSEA:** < .05 indicates "good" fit Brown (2015)
+# -   **CFI:** > .95 indicates "good" fit Brown (2015)
+# -  **SRMR:** < .08 indicates "good" fit Hu and Bentler (1999)
+# - **Invariance:** Changes in **CFI** less than or equal to **-0.01** are acceptable
 
-### read all of the output files 
-```{r}
+
+# read all of the output files 
 all_models <- readModels(here("invar_mplus"))
-```
+ 
 
 ### extract fit statistics, sort by `Filename`
-```{r}
-
 invar_summary <- LatexSummaryTable(all_models, 
-                 keepCols=c("Filename", "Parameters","ChiSqM_Value", "CFI","TLI",
-                            "SRMR", "RMSEA_Estimate", "RMSEA_90CI_LB", "RMSEA_90CI_UB"), 
-                 sortBy = "Filename")
-```
+                                   keepCols=c("Filename", "Parameters","ChiSqM_Value", "CFI","TLI",
+                                              "SRMR", "RMSEA_Estimate", "RMSEA_90CI_LB", "RMSEA_90CI_UB"), 
+                                   sortBy = "Filename")
+ 
 
 ### Create table and rename columns 
-```{r}
-
 invar_summary %>% 
   kable(booktabs = T,
         col.names = c("Model",
@@ -672,23 +612,22 @@ invar_summary %>%
   kable_styling(latex_options = c("striped", "scale_down", linesep = ""), 
                 full_width = F,
                 position = "left")
-```
+ 
 
 ### Calculate Satora-Bentler scaled Chi-square difference test (use with MLR estimator) 
 
 #### [$\color{blue}{\text{See website: stats.idre.ucla.edu}}$](https://stats.idre.ucla.edu/mplus/faq/how-can-i-compute-a-chi-square-test-for-nested-models-with-the-mlr-or-mlm-estimators/)
 
-- SB0 = null model Chi-square value
-- SB1 = alternate model Chi-square value
-- c0  = null model scaling correction factor
-- c1  = alternate model scaling correction factor
-- d0  = null model degrees of freedom
-- d1  = alternate model degrees of freedom
-- df  = Chi-square test degrees of freedom
+# - SB0 = null model Chi-square value
+# - SB1 = alternate model Chi-square value
+# - c0  = null model scaling correction factor
+# - c1  = alternate model scaling correction factor
+# - d0  = null model degrees of freedom
+# - d1  = alternate model degrees of freedom
+# - df  = Chi-square test degrees of freedom
 
-```{r}
+  
 # compare configural to metric
-
 SB0 <- all_models[["M4_metric.out"]][["summaries"]][["ChiSqM_Value"]]
 SB1 <- all_models[["M3_configural.out"]][["summaries"]][["ChiSqM_Value"]]
 c0  <- all_models[["M4_metric.out"]][["summaries"]][["ChiSqM_ScalingCorrection"]]
@@ -707,11 +646,10 @@ df
 
 # Significance test
 pchisq(t, df, lower.tail=FALSE)
-```
+ 
 
-```{r}
+ 
 # compare metric to scalar
-
 SB0 <- all_models[["M5_scalar.out"]][["summaries"]][["ChiSqM_Value"]]
 SB1 <- all_models[["M4_metric.out"]][["summaries"]][["ChiSqM_Value"]]
 c0  <- all_models[["M5_scalar.out"]][["summaries"]][["ChiSqM_ScalingCorrection"]]
@@ -730,12 +668,10 @@ df
 
 # Significance test
 pchisq(t, df, lower.tail=FALSE)
-```
+ 
 
 
 ## Invariance short-cut 
-```{r}
-
 mx  <- mplusObject(
   TITLE = "INVARIANCE SHORT_CUT - LAB 9 DEMO", 
   VARIABLE = 
@@ -744,10 +680,10 @@ mx  <- mplusObject(
      grouping = freelnch (0=freelnch_0 1=freelnch_1); ", 
   
   ANALYSIS = 
-  "Estimator = MLR;
+    "Estimator = MLR;
    MODEL= CONFIG METRIC SCALAR;",
   
-     MODEL = 
+  MODEL = 
     "VICTIM by stolen* t_hurt p_fight hit damaged bullied;
      VICTIM@1; 
      
@@ -756,34 +692,34 @@ mx  <- mplusObject(
   
   PLOT = "",
   OUTPUT = "sampstat residual;",
- 
+  
   usevariables = colnames(invar_data), 
   rdata = invar_data)
 
 mx_fit <- mplusModeler(mx, 
-                            dataout=here("invar_short", "Invar_short_cut.dat"),
-                            modelout=here("invar_short", "Invar_short_cut.inp"),
-                            check=TRUE, run = TRUE, hashfilename = FALSE)
+                       dataout=here("invar_short", "Invar_short_cut.dat"),
+                       modelout=here("invar_short", "Invar_short_cut.inp"),
+                       check=TRUE, run = TRUE, hashfilename = FALSE)
 
-```
+ 
 
 
 #### Invariance Testing (Chi-square values - Chi-Square difference p-values are biased)
 
 
-                   Number of                   Degrees of
-     Model        Parameters      Chi-Square    Freedom     P-Value
-
-     Configural        62            149.315        68       0.0000
-     Metric            54            163.312        76       0.0000
-     Scalar            46            179.176        84       0.0000
-
-                                               Degrees of
-     Models Compared              Chi-Square    Freedom     P-Value
-
-     Metric against Configural        14.759         8       0.0640
-     Scalar against Configural        30.022        16       0.0179
-     Scalar against Metric            15.444         8       0.0511
+# Number of                   Degrees of
+# Model        Parameters      Chi-Square    Freedom     P-Value
+# 
+# Configural        62            149.315        68       0.0000
+# Metric            54            163.312        76       0.0000
+# Scalar            46            179.176        84       0.0000
+# 
+# Degrees of
+# Models Compared              Chi-Square    Freedom     P-Value
+# 
+# Metric against Configural        14.759         8       0.0640
+# Scalar against Configural        30.022        16       0.0179
+# Scalar against Metric            15.444         8       0.0511
 
 
 ## ____________________________________
@@ -795,27 +731,14 @@ mx_fit <- mplusModeler(mx,
 
 ## References
 
-Hallquist, M. N., & Wiley, J. F. (2018). MplusAutomation: An R Package for Facilitating Large-Scale Latent Variable Analyses in Mplus. Structural equation modeling: a multidisciplinary journal, 25(4), 621-638.
-
-Horst, A. (2020). Course & Workshop Materials. GitHub Repositories, https://https://allisonhorst.github.io/
-
-Lauff, E., & Ingels, S. J. (2014). Education Longitudinal Study of 2002 (ELS: 2002): A First Look at 2002 High School Sophomores 10 Years Later. First Look. NCES 2014-363. National Center for Education Statistics.
-
-Muthén, L.K. and Muthén, B.O. (1998-2017).  Mplus User’s Guide.  Eighth Edition. Los Angeles, CA: Muthén & Muthén
-
-R Core Team (2017). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria. URL http://www.R-project.org/
-
-Wickham et al., (2019). Welcome to the tidyverse. Journal of Open Source Software, 4(43), 1686, https://doi.org/10.21105/joss.01686
-
-![](figures/UCSB_Navy_mark.png){ width=75% }
-
-
-
-
-
-
-
-
-
-
-
+# Hallquist, M. N., & Wiley, J. F. (2018). MplusAutomation: An R Package for Facilitating Large-Scale Latent Variable Analyses in Mplus. Structural equation modeling: a multidisciplinary journal, 25(4), 621-638.
+# 
+# Horst, A. (2020). Course & Workshop Materials. GitHub Repositories, https://https://allisonhorst.github.io/
+#   
+#   Lauff, E., & Ingels, S. J. (2014). Education Longitudinal Study of 2002 (ELS: 2002): A First Look at 2002 High School Sophomores 10 Years Later. First Look. NCES 2014-363. National Center for Education Statistics.
+# 
+# Muthén, L.K. and Muthén, B.O. (1998-2017).  Mplus User’s Guide.  Eighth Edition. Los Angeles, CA: Muthén & Muthén
+# 
+# R Core Team (2017). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria. URL http://www.R-project.org/
+#   
+#   Wickham et al., (2019). Welcome to the tidyverse. Journal of Open Source Software, 4(43), 1686, https://doi.org/10.21105/joss.01686
