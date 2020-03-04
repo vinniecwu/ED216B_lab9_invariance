@@ -1,4 +1,9 @@
-# ---
+# Vinnie check
+
+library(usethis)
+use_git_config(user.name = "vinniecwu", user.email = "vinniecwu@gmail.com")
+
+#---
 #   title: "Factor Analysis - Measurement Invariance"
 # author: "*Adam Garber*"
 # subtitle: 'Factor Analysis ED 216B - Instructor: Karen Nylund-Gibson'
@@ -27,7 +32,6 @@ library(reshape2)
 #### Read in data
 lab_data <- read_csv(here("data", "els2002_data_subset3.csv"))
 
- 
 
 #### Preparations: subset,reorder, rename, and recode data
 invar_data <-  lab_data %>% 
@@ -86,7 +90,7 @@ corrplot(cor_matrix,
 
 ### Number of parameters = 31
 
-# - 10 item loadings (10items*2groups)
+# - 10 item loadings (10items)
 # - 10 intercepts
 # - 10 residual variances
 # - 01 factor co-variances 
@@ -286,7 +290,7 @@ cfa_m4  <- mplusObject(
      NEG_CLIM by unsafe* disrupt gangs rac_fght;
      NEG_CLIM@1;
      
-     [VICTIM-NEG_CLIM@0]; 
+     [VICTIM-NEG_CLIM@0]; !holding means to be 0 for both groups
   
      MODEL freelnch_1:
      
@@ -318,7 +322,7 @@ cfa_m4_fit <- mplusModeler(cfa_m4,
 # - item loadings (set to equal)
 # - intercepts (set to equal)
 # - free residuals
-# - factor means fixed to zero
+# - free factor means in group 2
 # - free factor variances in group 2
 
 # ____________________________________
@@ -377,8 +381,8 @@ cfa_m5_fit <- mplusModeler(cfa_m5,
 # - item loadings (set to equal)
 # - intercepts (set to equal)
 # - residuals (set to equal)
-# - factor means fixed to zero
-# - free factor variances in group 2
+# - free factor means in group 2 (fixed in group 1)
+# - free factor variances in group 2 (fixed in group 1)
 
 # ____________________________________
 
@@ -420,7 +424,7 @@ cfa_m6  <- mplusObject(
      
      [VICTIM-NEG_CLIM]; ! free factor means
   
-     stolen-rac_fght(1-10); ", 
+     stolen-rac_fght(1-10); ! same 1-10 label as previous model! ",  
   
   PLOT = "type = plot3;",
   OUTPUT = "sampstat standardized residual modindices (3.84);",
@@ -453,7 +457,7 @@ cfa_m6_fit <- mplusModeler(cfa_m6,
 # - 10 item loadings (set to equal)
 # - 10 intercepts (set to equal)
 # - 20 residual variances
-# - 00 factor variances 
+# - 02 factor variances 
 # - 02 factor co-variances 
 # - 02 factor means
   
@@ -470,7 +474,7 @@ cfa_m7  <- mplusObject(
   
   MODEL = 
     "VICTIM by stolen* t_hurt p_fight hit damaged bullied;
-     VICTIM@1; 
+     VICTIM@1; ! factor variances are fixed to 1
      
      NEG_CLIM by unsafe* disrupt gangs rac_fght;
      NEG_CLIM@1;
@@ -612,7 +616,6 @@ invar_summary %>%
   kable_styling(latex_options = c("striped", "scale_down", linesep = ""), 
                 full_width = F,
                 position = "left")
- 
 
 ### Calculate Satora-Bentler scaled Chi-square difference test (use with MLR estimator) 
 
